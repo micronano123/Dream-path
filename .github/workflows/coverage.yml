@@ -21,6 +21,28 @@ jobs:
         with:
           channel: stable
 
+      - name: Find project root
+        id: find_project
+        run: |
+          echo "Looking for pubspec.yaml in the repository..."
+          if [ -f "pubspec.yaml" ]; then
+            echo "Found pubspec.yaml in the root directory."
+            echo "PROJECT_ROOT=." >> $GITHUB_ENV
+          else
+            echo "pubspec.yaml not found in the root directory. Searching subdirectories..."
+            PROJECT_ROOT=$(find . -name "pubspec.yaml" -exec dirname {} \; | head -n 1)
+            if [ -z "$PROJECT_ROOT" ]; then
+              echo "Error: Could not find pubspec.yaml in any subdirectory."
+              exit 1
+            else
+              echo "Found pubspec.yaml in $PROJECT_ROOT"
+              echo "PROJECT_ROOT=$PROJECT_ROOT" >> $GITHUB_ENV
+            fi
+          fi
+
+      - name: Change to project root directory
+        run: cd ${{ env.PROJECT_ROOT }}
+
       - name: Install dependencies
         run: flutter pub get
 
